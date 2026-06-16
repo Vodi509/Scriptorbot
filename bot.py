@@ -2,50 +2,46 @@ import logging
 import asyncio
 import os
 import google.generativeai as genai
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from dotenv import load_dotenv
 
-# ================================================
-# 1. ЗАГРУЖАЕМ ТОКЕНЫ ИЗ ФАЙЛА .env
-# ================================================
-load_dotenv()
-
+# ==============================================
+# ЗАГРУЖАЕМ ТОКЕНЫ
+# ==============================================
 TOKEN = os.getenv("BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not TOKEN or not GEMINI_API_KEY:
-    print("❌ ОШИБКА: Создай файл .env с токенами!")
-    print("BOT_TOKEN=твой_токен")
-    print("GEMINI_API_KEY=твой_ключ")
+    print("❌ ОШИБКА: Добавь переменные BOT_TOKEN и GEMINI_API_KEY в Render!")
     exit()
 
-# ================================================
-# 2. НАСТРАИВАЕМ GEMINI
-# ================================================
+# ==============================================
+# НАСТРАИВАЕМ GEMINI
+# ==============================================
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-# ================================================
-# 3. СОЗДАЁМ БОТА
-# ================================================
+# ==============================================
+# СОЗДАЁМ БОТА
+# ==============================================
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# ================================================
-# 4. СОСТОЯНИЯ
-# ================================================
+# ==============================================
+# СОСТОЯНИЯ
+# ==============================================
 class ScriptState(StatesGroup):
     waiting_for_place = State()
     waiting_for_idea_choice = State()
     waiting_for_script_request = State()
 
-# ================================================
-# 5. ГЕНЕРАЦИЯ ИДЕЙ
-# ================================================
+# ==============================================
+# ГЕНЕРАЦИЯ ИДЕЙ
+# ==============================================
 async def generate_ideas(place_name: str) -> list:
     prompt = f"""
     Игра в Roblox: {place_name}
@@ -83,9 +79,9 @@ async def generate_ideas(place_name: str) -> list:
             "Автоматическое выполнение квестов"
         ]
 
-# ================================================
-# 6. КОМАНДА /start
-# ================================================
+# ==============================================
+# КОМАНДА /start
+# ==============================================
 @dp.message(Command("start"))
 async def start_cmd(message: Message, state: FSMContext):
     await state.clear()
@@ -97,9 +93,9 @@ async def start_cmd(message: Message, state: FSMContext):
     )
     await state.set_state(ScriptState.waiting_for_place)
 
-# ================================================
-# 7. ПОЛЬЗОВАТЕЛЬ НАПИСАЛ НАЗВАНИЕ ИГРЫ
-# ================================================
+# ==============================================
+# ПОЛЬЗОВАТЕЛЬ НАПИСАЛ НАЗВАНИЕ ИГРЫ
+# ==============================================
 @dp.message(ScriptState.waiting_for_place)
 async def get_place(message: Message, state: FSMContext):
     place_name = message.text.strip()
@@ -119,9 +115,9 @@ async def get_place(message: Message, state: FSMContext):
     await loading_msg.edit_text(text)
     await state.set_state(ScriptState.waiting_for_idea_choice)
 
-# ================================================
-# 8. ПОЛЬЗОВАТЕЛЬ ВЫБРАЛ ИДЕЮ
-# ================================================
+# ==============================================
+# ПОЛЬЗОВАТЕЛЬ ВЫБРАЛ ИДЕЮ
+# ==============================================
 @dp.message(ScriptState.waiting_for_idea_choice)
 async def generate_script(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -178,9 +174,9 @@ async def generate_script(message: Message, state: FSMContext):
         )
         print(f"Ошибка: {e}")
 
-# ================================================
-# 9. ПОЛЬЗОВАТЕЛЬ ПРИСЛАЛ ОШИБКУ
-# ================================================
+# ==============================================
+# ПОЛЬЗОВАТЕЛЬ ПРИСЛАЛ ОШИБКУ
+# ==============================================
 @dp.message(ScriptState.waiting_for_script_request)
 async def fix_error(message: Message, state: FSMContext):
     error_text = message.text
@@ -212,13 +208,13 @@ async def fix_error(message: Message, state: FSMContext):
             "❌ Не смог разобрать ошибку. Опиши подробнее."
         )
 
-# ================================================
-# 10. ЗАПУСК
-# ================================================
+# ==============================================
+# ЗАПУСК
+# ==============================================
 async def main():
     logging.basicConfig(level=logging.INFO)
     print("=" * 40)
-    print("🤖 БОТ ЗАПУЩЕН НА ТЕЛЕФОНЕ!")
+    print("🤖 БОТ ЗАПУЩЕН!")
     print("📱 Напиши /start в Telegram")
     print("=" * 40)
     await dp.start_polling(bot)
